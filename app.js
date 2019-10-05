@@ -11,7 +11,8 @@ const fs = require('fs')
 const indexRouter = require('./routes/index')
 const usersRouter = require('./routes/users')
 const csv = require('csv-parser');
-const HTMLParser = require('node-html-parser');
+// const HTMLParser = require('node-html-parser');
+const DomParser = require('dom-parser');
 
 const app = express();
 
@@ -65,17 +66,15 @@ fs.createReadStream('data/luas-stops.txt')
   })
   .on('end', () => {
     console.log('File successfully processed');
-    console.log(stopIDs);
+    // console.log(stopIDs);
   })
   .on('error', (e) => {
     console.error(`There's been an error ${e}`);
   });
 
-
-
-
 let luasAPIBase = "https://luasforecasts.rpa.ie/analysis/view.aspx?id=";
 
+// use an async function that returns a promise, making the susequent call thenable
 const getLuasHTML = async url => {
   try {
     const response = await fetch(url);
@@ -87,20 +86,62 @@ const getLuasHTML = async url => {
     return util.log(error);
   }
 };
+//the call to the function returns a promise, so easy to proceed with response data with then()
+getLuasHTML(luasAPIBase + '1')
+  .then((html) => {
 
-const html = async () => {
-  const res = await getLuasHTML(luasAPIBase + '1');
-  return res;
-};
+    let parser = new DomParser();
+    let htmlDoc = parser.parseFromString(html);
+    console.log(htmlDoc.getElementById('cplBody_lblMessage').childNodes[0].text);
 
+    let headings = htmlDoc.getElementsByTagName("th");
+    console.log("#cols = " + headings.length + "\n");
+    let rows = htmlDoc.getElementsByTagName("tr");
+    console.log("#rows = " + rows.length + "\n");
+    let tableData = [];
+    for (let i = 1; i < rows.length; i += 1) {
+      let obj = {};
+      for (let j = 0; j < headings.length; j += 1) {
+        let heading = headings[j]
+          .childNodes[0];
+        // .nodeValue;
+        console.log("heading: " + JSON.stringify(heading));
+        let value = rows[i].getElementsByTagName("td")[j].innerHTML;
+        console.log("\nvalue: " + value);
+        obj[heading] = value;
+      }
+      console.log("obj: " + JSON.stringify(obj));
+      tableData.push(obj);
+    }
+    tableData.forEach((d, i) => {
+      console.log(d.route + " Due: " + d.duetime + "");
+      //only return n results
+      // if (i <= 7) {
+      //   luasRT += "<br><b>" + d["Direction"] +
+      //     "</b> to <b>" + d["Destination"] + "</b>";
+      //   if (d["Time"]) {
+      //     let min = d["Time"].split(":")[1];
+      //     if (min === "00") {
+      //       luasRT += " is <b>Due now</b>";
+      //
+      //     } else {
+      //       luasRT += " is due in <b>" + min + "</b> mins";
+      //     }
+      //   } else {
+      //     "n/a";
+      //   }
+      // }
 
-// const htmlDoc = HTMLParser.parse(html);
-// console.log(htmlDoc);
-// console.log(htmlDoc.firstChild.structure);
+    });
+
+  })
+  .catch((e) => {
+    console.log(`Error fetching html data \n ${e}`);
+  });
+
 
 
 // console.log(getLuasHTML(luasAPIBase + '1'));
-
 
 cron.schedule('*/1 * * * *', () => {
   // util.log(`Running luas cron`);
