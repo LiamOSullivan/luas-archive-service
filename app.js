@@ -67,6 +67,10 @@ fs.createReadStream('data/luas-stops.txt')
   .on('end', () => {
     console.log('File successfully processed');
     // console.log(stopIDs);
+    /*
+    TODO: Call first luas fetch/cron from here
+    */
+    luasCron;
   })
   .on('error', (e) => {
     console.error(`There's been an error ${e}`);
@@ -86,13 +90,14 @@ const getLuasHTML = async url => {
     return util.log(error);
   }
 };
+
 //the call to the function returns a promise, so easy to proceed with response data with then()
 getLuasHTML(luasAPIBase + '1')
   .then((html) => {
 
     let parser = new DomParser();
     let htmlDoc = parser.parseFromString(html);
-    console.log(htmlDoc.getElementById('cplBody_lblMessage').childNodes[0].text);
+    // console.log(htmlDoc.getElementById('cplBody_lblMessage').childNodes[0].text);
 
     let headings = htmlDoc.getElementsByTagName("th");
     console.log("#cols = " + headings.length + "\n");
@@ -102,8 +107,7 @@ getLuasHTML(luasAPIBase + '1')
     for (let i = 1; i < rows.length; i += 1) {
       let obj = {};
       for (let j = 0; j < headings.length; j += 1) {
-        let heading = headings[j]
-          .childNodes[0];
+        let heading = headings[j].childNodes[0].text;
         // .nodeValue;
         console.log("heading: " + JSON.stringify(heading));
         let value = rows[i].getElementsByTagName("td")[j].innerHTML;
@@ -113,38 +117,16 @@ getLuasHTML(luasAPIBase + '1')
       console.log("obj: " + JSON.stringify(obj));
       tableData.push(obj);
     }
-    tableData.forEach((d, i) => {
-      console.log(d.route + " Due: " + d.duetime + "");
-      //only return n results
-      // if (i <= 7) {
-      //   luasRT += "<br><b>" + d["Direction"] +
-      //     "</b> to <b>" + d["Destination"] + "</b>";
-      //   if (d["Time"]) {
-      //     let min = d["Time"].split(":")[1];
-      //     if (min === "00") {
-      //       luasRT += " is <b>Due now</b>";
-      //
-      //     } else {
-      //       luasRT += " is due in <b>" + min + "</b> mins";
-      //     }
-      //   } else {
-      //     "n/a";
-      //   }
-      // }
-
-    });
-
+    console.log(tableData);
   })
   .catch((e) => {
     console.log(`Error fetching html data \n ${e}`);
   });
 
-
-
 // console.log(getLuasHTML(luasAPIBase + '1'));
 
-cron.schedule('*/1 * * * *', () => {
-  // util.log(`Running luas cron`);
+const luasCron = cron.schedule('*/1 * * * *', () => {
+  util.log(`Running luas cron`);
   // const html = getLuasHTML(luasAPIBase + '1')
   // const htmlDoc = HTMLParser.parse(luasAPIBase + '1');
   // console.log(htmlDoc);
