@@ -67,10 +67,7 @@ fs.createReadStream('data/luas-stops.txt')
   .on('end', () => {
     console.log('File successfully processed');
     // console.log(stopIDs);
-    /*
-    TODO: Call first luas fetch/cron from here
-    */
-    luasCron;
+    luasCron();
   })
   .on('error', (e) => {
     console.error(`There's been an error ${e}`);
@@ -94,7 +91,6 @@ const getLuasHTML = async url => {
 //the call to the function returns a promise, so easy to proceed with response data with then()
 getLuasHTML(luasAPIBase + '1')
   .then((html) => {
-
     let parser = new DomParser();
     let htmlDoc = parser.parseFromString(html);
     // console.log(htmlDoc.getElementById('cplBody_lblMessage').childNodes[0].text);
@@ -125,37 +121,10 @@ getLuasHTML(luasAPIBase + '1')
 
 // console.log(getLuasHTML(luasAPIBase + '1'));
 
-const luasCron = cron.schedule('*/1 * * * *', () => {
-  util.log(`Running luas cron`);
-  // const html = getLuasHTML(luasAPIBase + '1')
-  // const htmlDoc = HTMLParser.parse(luasAPIBase + '1');
-  // console.log(htmlDoc);
-  // console.log(htmlDoc.firstChild.structure);
-
-  // d3.html(luasAPIBase + '1')
-  //   .then(function(htmlDoc) {
-  //     //                console.log(htmlDoc.body);
-  //     let infoString = htmlDoc.getElementById("cplBody_lblMessage")
-  //       .childNodes[0].nodeValue;
-  //     //console.log("info: " + infoString + "\n");
-  //     let headings = htmlDoc.getElementsByTagName("th");
-  //     //console.log("#cols = " + headings.length + "\n");
-  //     let rows = htmlDoc.getElementsByTagName("tr");
-  //     //console.log("#rows = " + rows.length + "\n");
-  //     let tableData = [];
-  //     for (let i = 1; i < rows.length; i += 1) {
-  //       let obj = {};
-  //       for (let j = 0; j < headings.length; j += 1) {
-  //         let heading = headings[j]
-  //           .childNodes[0]
-  //           .nodeValue;
-  //         let value = rows[i].getElementsByTagName("td")[j].innerHTML;
-  //         //console.log("\nvalue: "+ value);
-  //         obj[heading] = value;
-  //       }
-  //       //console.log("\n");
-  //       tableData.push(obj);
-  //     }
-});
+function luasCron() {
+  cron.schedule('*/1 * * * *', () => {
+    util.log(`Running luas cron`);
+  })
+};
 
 module.exports = app;
