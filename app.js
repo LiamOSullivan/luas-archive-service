@@ -93,16 +93,16 @@ const getLuasHTML = async url => {
 
 function getLuasBatch(stops) {
   stops.forEach((stop, i) => {
-    console.log(i + " Get stop " + stop);
+    //console.log(i + " Get stop " + stop);
     if (i == stops.length - 1) {
-      console.log("***");
+      //console.log("***");
     }
     getLuasHTML(luasAPIBase + stop)
       .then((html) => {
         let parser = new DomParser();
         let htmlDoc = parser.parseFromString(html);
         // console.log(htmlDoc.getElementById('cplBody_lblMessage').childNodes[0].text);
-        console.log(i + " Got stop " + stop);
+        //console.log(i + " Got stop " + stop);
         let headings = htmlDoc.getElementsByTagName("th");
         // console.log("#cols = " + headings.length + "\n");
         let rows = htmlDoc.getElementsByTagName("tr");
@@ -110,6 +110,7 @@ function getLuasBatch(stops) {
         let tableData = [];
         for (let i = 1; i < rows.length; i += 1) {
           let obj = {};
+          obj["StopID"] = stop;
           for (let j = 0; j < headings.length; j += 1) {
             let heading = headings[j].childNodes[0].text;
             // .nodeValue;
@@ -121,7 +122,7 @@ function getLuasBatch(stops) {
           // console.log("obj: " + JSON.stringify(obj));
           tableData.push(obj);
         }
-        // console.log(tableData);
+        console.log(tableData);
       })
       .catch((e) => {
         console.log(`Error fetching html data \n ${e}`);
