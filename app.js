@@ -65,9 +65,10 @@ fs.createReadStream('data/luas-stops.txt')
     stopIDs.push(row[stopID]);
   })
   .on('end', () => {
-    console.log('File successfully processed');
+    console.log('Luas Stops file successfully processed');
     // console.log(stopIDs);
-    luasCron();
+    luasCron(stopIDs);
+    getLuasBatch(stopIDs);
   })
   .on('error', (e) => {
     console.error(`There's been an error ${e}`);
@@ -89,41 +90,52 @@ const getLuasHTML = async url => {
 };
 
 //the call to the function returns a promise, so easy to proceed with response data with then()
-getLuasHTML(luasAPIBase + '1')
-  .then((html) => {
-    let parser = new DomParser();
-    let htmlDoc = parser.parseFromString(html);
-    // console.log(htmlDoc.getElementById('cplBody_lblMessage').childNodes[0].text);
 
-    let headings = htmlDoc.getElementsByTagName("th");
-    console.log("#cols = " + headings.length + "\n");
-    let rows = htmlDoc.getElementsByTagName("tr");
-    console.log("#rows = " + rows.length + "\n");
-    let tableData = [];
-    for (let i = 1; i < rows.length; i += 1) {
-      let obj = {};
-      for (let j = 0; j < headings.length; j += 1) {
-        let heading = headings[j].childNodes[0].text;
-        // .nodeValue;
-        console.log("heading: " + JSON.stringify(heading));
-        let value = rows[i].getElementsByTagName("td")[j].innerHTML;
-        console.log("\nvalue: " + value);
-        obj[heading] = value;
-      }
-      console.log("obj: " + JSON.stringify(obj));
-      tableData.push(obj);
+function getLuasBatch(stops) {
+  stops.forEach((stop, i) => {
+    console.log(i + " Get stop " + stop);
+    if (i == stops.length - 1) {
+      console.log("***");
     }
-    console.log(tableData);
-  })
-  .catch((e) => {
-    console.log(`Error fetching html data \n ${e}`);
+    getLuasHTML(luasAPIBase + stop)
+      .then((html) => {
+        let parser = new DomParser();
+        let htmlDoc = parser.parseFromString(html);
+        // console.log(htmlDoc.getElementById('cplBody_lblMessage').childNodes[0].text);
+        console.log(i + " Got stop " + stop);
+        let headings = htmlDoc.getElementsByTagName("th");
+        // console.log("#cols = " + headings.length + "\n");
+        let rows = htmlDoc.getElementsByTagName("tr");
+        // console.log("#rows = " + rows.length + "\n");
+        let tableData = [];
+        for (let i = 1; i < rows.length; i += 1) {
+          let obj = {};
+          for (let j = 0; j < headings.length; j += 1) {
+            let heading = headings[j].childNodes[0].text;
+            // .nodeValue;
+            // console.log("heading: " + JSON.stringify(heading));
+            let value = rows[i].getElementsByTagName("td")[j].innerHTML;
+            // console.log("\nvalue: " + value);
+            obj[heading] = value;
+          }
+          // console.log("obj: " + JSON.stringify(obj));
+          tableData.push(obj);
+        }
+        // console.log(tableData);
+      })
+      .catch((e) => {
+        console.log(`Error fetching html data \n ${e}`);
+      });
   });
+};
+
 
 // console.log(getLuasHTML(luasAPIBase + '1'));
 
-function luasCron() {
+function luasCron(stops) {
   cron.schedule('*/1 * * * *', () => {
     util.log(`Running luas cron`);
+    getLuasBatch(stops);
   })
 };
 
