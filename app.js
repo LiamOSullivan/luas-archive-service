@@ -15,7 +15,6 @@ const DomParser = require('dom-parser');
 const pg = require('pg');
 const db = new pg.Client();
 
-
 const app = express();
 
 // view engine setup
@@ -74,7 +73,7 @@ fs.createReadStream('data/luas-stops.txt')
       util.log(`***
                   Dashboard is in dev- run query now
                 ***`);
-      getLuasBatch(stopIDs); //start batch script now (for dev)
+      getLuasBatch(stopIDs, true); //start batch script now (for dev), save example data as text
     }
   })
   .on('error', (e) => {
@@ -98,7 +97,8 @@ const getLuasHTML = async url => {
 
 //the call to the function returns a promise, so easy to proceed with response data with then()
 
-function getLuasBatch(stops) {
+function getLuasBatch(stops, SAVE_EXAMPLE_DATA) {
+  // if(SAVE_EXAMPLE_DATA) luasExampleData = createOutputStream();
   stops.forEach((stop, i) => {
     //console.log(i + " Get stop " + stop);
     if (i == stops.length - 1) {
@@ -129,7 +129,7 @@ function getLuasBatch(stops) {
           // console.log("obj: " + JSON.stringify(obj));
           tableData.push(obj);
         }
-        //console.log(tableData);
+        // console.log(tableData);
         // /console.log(`Stop #${stop} returned records size: ${tableData.length}`);
       })
       .catch((e) => {
@@ -144,10 +144,9 @@ function getLuasBatch(stops) {
 function luasCron(stops) {
   cron.schedule('*/1 * * * *', () => {
     util.log(`Running luas cron`);
-    getLuasBatch(stops);
+    getLuasBatch(stops, false); // don't save example data as text
   })
 };
-
 
 db.connect((err) => {
   if (err) throw err
