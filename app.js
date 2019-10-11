@@ -11,8 +11,10 @@ const fs = require('fs')
 const indexRouter = require('./routes/index')
 const usersRouter = require('./routes/users')
 const csv = require('csv-parser');
-// const HTMLParser = require('node-html-parser');
 const DomParser = require('dom-parser');
+const pg = require('pg');
+const db = new pg.Client();
+
 
 const app = express();
 
@@ -67,8 +69,13 @@ fs.createReadStream('data/luas-stops.txt')
   .on('end', () => {
     console.log('Luas Stops file successfully processed');
     // console.log(stopIDs);
-    luasCron(stopIDs);
-    getLuasBatch(stopIDs);
+    luasCron(stopIDs); //start batch script on a schedule
+    if (app.get('env') === 'development') {
+      util.log(`***
+                  Dashboard is in dev- run query now
+                ***`);
+      getLuasBatch(stopIDs); //start batch script now (for dev)
+    }
   })
   .on('error', (e) => {
     console.error(`There's been an error ${e}`);
@@ -122,7 +129,8 @@ function getLuasBatch(stops) {
           // console.log("obj: " + JSON.stringify(obj));
           tableData.push(obj);
         }
-        console.log(tableData);
+        //console.log(tableData);
+        // /console.log(`Stop #${stop} returned records size: ${tableData.length}`);
       })
       .catch((e) => {
         console.log(`Error fetching html data \n ${e}`);
@@ -139,5 +147,53 @@ function luasCron(stops) {
     getLuasBatch(stops);
   })
 };
+
+
+db.connect((err) => {
+  if (err) throw err
+  // db.query(`
+  //   CREATE TABLE IF NOT EXISTS quote_docs (
+  //     id SERIAL,
+  //     doc jsonb,
+  //     CONSTRAINT author CHECK (length(doc->>'author') > 0 AND (doc->>'author') IS NOT NULL),
+  //     CONSTRAINT quote CHECK (length(doc->>'quote') > 0 AND (doc->>'quote') IS NOT NULL)
+  //   )
+  // `, (err) => {
+  //   if (err) throw err
+  //
+  //   if (params.author && params.quote) {
+  //     db.query(`
+  //       INSERT INTO quote_docs (doc)
+  //       VALUES ($1);
+  //     `, [params], (err) => {
+  //       if (err) throw err
+  //       list(db, params)
+  //     })
+  //   }
+  //
+  //   if (!params.quote) list(db, params)
+  else {
+    console.log(`Connected to DB ${db}`);
+    list(db, `Neal Stephenson`)
+  }
+})
+
+function list(db, params) {
+  // if (!params.author) return db.end()
+  db.query(`
+    SELECT * FROM quotes
+    WHERE author LIKE ${db.escapeLiteral(params)}
+  `, (err, results) => {
+    if (err) throw err
+    results.rows.forEach(({
+      author,
+      quote
+    }) => {
+      console.log(`${author} ${quote}`)
+    })
+    db.end()
+  })
+}
+
 
 module.exports = app;
