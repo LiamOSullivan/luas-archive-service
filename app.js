@@ -133,7 +133,7 @@ function getLuasBatch(stops) {
         // /console.log(`Stop #${stop} returned records size: ${tableData.length}`);
       })
       .catch((e) => {
-        console.log(`Error fetching html data \n ${e}`);
+        console.log(`Error fetching html Luas data \n ${e}`);
       });
   });
 };
