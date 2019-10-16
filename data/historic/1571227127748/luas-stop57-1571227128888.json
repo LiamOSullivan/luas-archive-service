@@ -1,0 +1,53 @@
+[
+  {
+    "StopID": "57",
+    "timestamp": "2019-10-16T11:58:48.888Z",
+    "Direction": "Outbound",
+    "Destination": "Tallaght",
+    "Time": "00:02:09",
+    "AVLS": "00:02:49",
+    "Tram": "4008",
+    "Action": "d",
+    "Msg Sent": "16/10/2019 12:58:42",
+    "Msg Received": "16/10/2019 12:58:42",
+    "Msg Processed": "16/10/2019 12:58:43",
+    "XML ID": "16916",
+    "Total Lag": "1.0800631",
+    "Create Lag": "0.8613115",
+    "Process Lag": "0.2187516"
+  },
+  {
+    "StopID": "57",
+    "timestamp": "2019-10-16T11:58:48.888Z",
+    "Direction": "Outbound",
+    "Destination": "Tallaght",
+    "Time": "00:12:09",
+    "AVLS": "00:12:49",
+    "Tram": "4011",
+    "Action": "d",
+    "Msg Sent": "16/10/2019 12:58:42",
+    "Msg Received": "16/10/2019 12:58:42",
+    "Msg Processed": "16/10/2019 12:58:43",
+    "XML ID": "16917",
+    "Total Lag": "1.1738123",
+    "Create Lag": "0.8925718",
+    "Process Lag": "0.2812405"
+  },
+  {
+    "StopID": "57",
+    "timestamp": "2019-10-16T11:58:48.888Z",
+    "Direction": "Outbound",
+    "Destination": "Saggart",
+    "Time": "00:16:09",
+    "AVLS": "00:16:49",
+    "Tram": "3017",
+    "Action": "d",
+    "Msg Sent": "16/10/2019 12:58:42",
+    "Msg Received": "16/10/2019 12:58:42",
+    "Msg Processed": "16/10/2019 12:58:42",
+    "XML ID": "16915",
+    "Total Lag": "0.7831826",
+    "Create Lag": "0.5016978",
+    "Process Lag": "0.2814848"
+  }
+]

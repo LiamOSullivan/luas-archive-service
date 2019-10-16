@@ -1,0 +1,36 @@
+[
+  {
+    "StopID": "45",
+    "timestamp": "2019-10-16T11:58:17.712Z",
+    "Direction": "Inbound",
+    "Destination": "Parnell",
+    "Time": "00:07:40",
+    "AVLS": "00:08:20",
+    "Tram": "5016",
+    "Action": "a",
+    "Msg Sent": "16/10/2019 12:58:12",
+    "Msg Received": "16/10/2019 12:58:12",
+    "Msg Processed": "16/10/2019 12:58:13",
+    "XML ID": "16900",
+    "Total Lag": "1.186587",
+    "Create Lag": "0.575829",
+    "Process Lag": "0.610758"
+  },
+  {
+    "StopID": "45",
+    "timestamp": "2019-10-16T11:58:17.712Z",
+    "Direction": "Outbound",
+    "Destination": "Bride's Glen",
+    "Time": "00:06:13",
+    "AVLS": "00:06:53",
+    "Tram": "5008",
+    "Action": "a",
+    "Msg Sent": "16/10/2019 12:58:12",
+    "Msg Received": "16/10/2019 12:58:12",
+    "Msg Processed": "16/10/2019 12:58:13",
+    "XML ID": "16900",
+    "Total Lag": "1.1240892",
+    "Create Lag": "0.575829",
+    "Process Lag": "0.5482602"
+  }
+]
