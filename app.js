@@ -100,11 +100,9 @@ const getLuasHTML = async url => {
 function getLuasBatch(stops, SAVE_DATA_TO_FILE) {
   const queryTimeMS = Date.now();
   // if(SAVE_DATA_TO_FILE) luasExampleData = createOutputStream();
+  let stopData = [];
   stops.forEach((stop, i) => {
     //console.log(i + " Get stop " + stop);
-    if (i == stops.length - 1) {
-      //console.log("***");
-    }
     getLuasHTML(luasAPIBase + stop)
       .then((html) => {
         let parser = new DomParser();
@@ -117,7 +115,7 @@ function getLuasBatch(stops, SAVE_DATA_TO_FILE) {
         // console.log("#rows = " + rows.length + "\n");
 
         const timestamp = new Date();
-        let stopData = [];
+
         const ms = Date.now();
         let obj = {};
         obj["stopID"] = stop;
@@ -137,21 +135,28 @@ function getLuasBatch(stops, SAVE_DATA_TO_FILE) {
 
         }
         stopData.push(obj);
-        // console.log(stopData);
-        // /console.log(`Stop #${stop} returned records size: ${stopData.length}`);
-        if (SAVE_DATA_TO_FILE) {
-          const dir = path.join(__dirname, 'data', 'historic', `${queryTimeMS}`);
-          const filename = `luas-stop${stop.padStart(2, '0')}-${ms}.json`;
-          if (!fs.existsSync(dir)) {
-            fs.mkdirSync(dir);
+        // console.log(`Push Stop #${stop} stopData size: ${stopData.length}`);
+        /***
+        TODO: pipe to writable stream for file here instead of this
+        ***/
+        if (stopData.length === stops.length) {
+          // console.log("Finito");
+          if (SAVE_DATA_TO_FILE) {
+            // console.log("Save file");
+            const dir = path.join(__dirname, 'data', 'historic', `${queryTimeMS}`);
+            // const filename = `luas-stop${stop.padStart(2, '0')}-${ms}.json`;
+            const filename = `luas-${queryTimeMS}.json`;
+            if (!fs.existsSync(dir)) {
+              fs.mkdirSync(dir);
+            }
+            fs.writeFileSync(path.join(dir, filename), `${JSON.stringify(stopData, null, 2)}`);
+            console.log(`Luas data written to ${dir}/${filename}`);
           }
-          fs.writeFileSync(path.join(dir, filename), `${JSON.stringify(stopData, null, 2)}`);
-          console.log(`Luas data written to ${dir}/${filename}`);
         }
       })
       .catch((e) => {
         console.log(`Error fetching html Luas data \n ${e}`);
-      });
+      })
   });
 };
 
@@ -161,9 +166,10 @@ function getLuasBatch(stops, SAVE_DATA_TO_FILE) {
 function luasCron(stops) {
   cron.schedule('*/1 * * * *', () => {
     util.log(`Running luas cron`);
-    getLuasBatch(stops, false); // don't save example data as text
+    getLuasBatch(stops, true); // don't save example data as text
   })
 };
+
 
 // db.connect((err) => {
 //   if (err) throw err
