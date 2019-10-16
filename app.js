@@ -115,25 +115,28 @@ function getLuasBatch(stops, SAVE_DATA_TO_FILE) {
         // console.log("#cols = " + headings.length + "\n");
         let rows = htmlDoc.getElementsByTagName("tr");
         // console.log("#rows = " + rows.length + "\n");
-        let stopData = [];
-        const timestamp = new Date();
-        const ms = Date.now();
-        for (let i = 1; i < rows.length; i += 1) {
-          let obj = {};
-          obj["StopID"] = stop;
-          obj["timestamp"] = timestamp;
 
+        const timestamp = new Date();
+        let stopData = [];
+        const ms = Date.now();
+        let obj = {};
+        obj["stopID"] = stop;
+        obj["queryTime"] = timestamp;
+        obj["results"] = [];
+        //no of rows ion the data is the number of trams listed to arrive
+        for (let i = 1; i < rows.length; i += 1) {
+          let tramObj = {};
           for (let j = 0; j < headings.length; j += 1) {
-            let heading = headings[j].childNodes[0].text;
-            // .nodeValue;
+            let key = headings[j].childNodes[0].text;
             // console.log("heading: " + JSON.stringify(heading));
             let value = rows[i].getElementsByTagName("td")[j].innerHTML;
             // console.log("\nvalue: " + value);
-            obj[heading] = value;
+            tramObj[`${key}`] = value;
           }
-          // console.log("obj: " + JSON.stringify(obj));
-          stopData.push(obj);
+          obj["results"].push(tramObj);
+
         }
+        stopData.push(obj);
         // console.log(stopData);
         // /console.log(`Stop #${stop} returned records size: ${stopData.length}`);
         if (SAVE_DATA_TO_FILE) {
