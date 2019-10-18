@@ -169,53 +169,28 @@ function luasCron(stops) {
     getLuasBatch(stops, true); // don't save example data as text
   })
 };
+// Connection string
+const CONNECT_STRING = 'host=luas-archive-db-server.postgres.database.azure.com port=5432 dbname={your_database} user=losullivan@luas-archive-db-server password={your_password} sslmode=disable';
 
+const host = 'luas-archive-db-server.postgres.database.azure.com',
+  port = 5432,
+  dbname = 'luas-archive-db-server',
+  user = 'losullivan@luas-archive-db-server',
+  password = '*********';
+sslmode = true;
 
-// db.connect((err) => {
-//   if (err) throw err
-//   // db.query(`
-//   //   CREATE TABLE IF NOT EXISTS quote_docs (
-//   //     id SERIAL,
-//   //     doc jsonb,
-//   //     CONSTRAINT author CHECK (length(doc->>'author') > 0 AND (doc->>'author') IS NOT NULL),
-//   //     CONSTRAINT quote CHECK (length(doc->>'quote') > 0 AND (doc->>'quote') IS NOT NULL)
-//   //   )
-//   // `, (err) => {
-//   //   if (err) throw err
-//   //
-//   //   if (params.author && params.quote) {
-//   //     db.query(`
-//   //       INSERT INTO quote_docs (doc)
-//   //       VALUES ($1);
-//   //     `, [params], (err) => {
-//   //       if (err) throw err
-//   //       list(db, params)
-//   //     })
-//   //   }
-//   //
-//   //   if (!params.quote) list(db, params)
-//   else {
-//     console.log(`Connected to DB ${db}`);
+let client = new pg.Client({
+  user: user,
+  password: password,
+  database: dbname,
+  port: port,
+  host: host,
+  ssl: false
+});
+
+client.connect((e) => {
+  console.log("Error connecting to DB " + e);
+});
 //     list(db, `Neal Stephenson`)
-//   }
-// })
-//
-// function list(db, params) {
-//   // if (!params.author) return db.end()
-//   db.query(`
-//     SELECT * FROM quotes
-//     WHERE author LIKE ${db.escapeLiteral(params)}
-//   `, (err, results) => {
-//     if (err) throw err
-//     results.rows.forEach(({
-//       author,
-//       quote
-//     }) => {
-//       console.log(`${author} ${quote}`)
-//     })
-//     db.end()
-//   })
-// }
-
 
 module.exports = app;
