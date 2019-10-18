@@ -176,27 +176,27 @@ function luasCron(stops) {
   })
 };
 // Connection string
-const CONNECT_STRING = 'host=luas-archive-db-server.postgres.database.azure.com port=5432 dbname={your_database} user=losullivan@luas-archive-db-server password={your_password} sslmode=disable';
-
-const host = 'luas-archive-db-server.postgres.database.azure.com',
-  port = 5432,
-  dbname = 'luas-archive-db-server',
-  user = 'losullivan@luas-archive-db-server',
-  password = '*********';
-sslmode = true;
-
-let client = new pg.Client({
-  user: user,
-  password: password,
-  database: dbname,
-  port: port,
-  host: host,
-  ssl: false
-});
-
-client.connect((e) => {
-  console.log("Error connecting to DB " + e);
-});
+// const CONNECT_STRING = 'host=luas-archive-db-server.postgres.database.azure.com port=5432 dbname={your_database} user=losullivan@luas-archive-db-server password={your_password} sslmode=disable';
+//
+// const host = 'luas-archive-db-server.postgres.database.azure.com',
+//   port = 5432,
+//   dbname = 'luas-archive-db-server',
+//   user = 'losullivan@luas-archive-db-server',
+//   password = '*********';
+// sslmode = true;
+//
+// let client = new pg.Client({
+//   user: user,
+//   password: password,
+//   database: dbname,
+//   port: port,
+//   host: host,
+//   ssl: false
+// });
+//
+// client.connect((e) => {
+//   console.log("Error connecting to DB " + e);
+// });
 //     list(db, `Neal Stephenson`)
 
 module.exports = app;
