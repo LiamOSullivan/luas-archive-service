@@ -97,13 +97,12 @@ const getLuasHTML = async url => {
 
 //the call to the function returns a promise, so easy to proceed with response data with then()
 
-function getLuasBatch(stops, SAVE_EXAMPLE_DATA) {
-  // if(SAVE_EXAMPLE_DATA) luasExampleData = createOutputStream();
+function getLuasBatch(stops, SAVE_DATA_TO_FILE) {
+  const queryTimeMS = Date.now();
+  // if(SAVE_DATA_TO_FILE) luasExampleData = createOutputStream();
+  let stopData = [];
   stops.forEach((stop, i) => {
     //console.log(i + " Get stop " + stop);
-    if (i == stops.length - 1) {
-      //console.log("***");
-    }
     getLuasHTML(luasAPIBase + stop)
       .then((html) => {
         let parser = new DomParser();
@@ -114,27 +113,50 @@ function getLuasBatch(stops, SAVE_EXAMPLE_DATA) {
         // console.log("#cols = " + headings.length + "\n");
         let rows = htmlDoc.getElementsByTagName("tr");
         // console.log("#rows = " + rows.length + "\n");
-        let tableData = [];
+
+        const timestamp = new Date();
+
+        const ms = Date.now();
+        let obj = {};
+        obj["stopID"] = stop;
+        obj["queryTime"] = timestamp;
+        obj["results"] = [];
+        //no of rows ion the data is the number of trams listed to arrive
         for (let i = 1; i < rows.length; i += 1) {
-          let obj = {};
-          obj["StopID"] = stop;
+          let tramObj = {};
           for (let j = 0; j < headings.length; j += 1) {
-            let heading = headings[j].childNodes[0].text;
-            // .nodeValue;
+            let key = headings[j].childNodes[0].text;
             // console.log("heading: " + JSON.stringify(heading));
             let value = rows[i].getElementsByTagName("td")[j].innerHTML;
             // console.log("\nvalue: " + value);
-            obj[heading] = value;
+            tramObj[`${key}`] = value;
           }
-          // console.log("obj: " + JSON.stringify(obj));
-          tableData.push(obj);
+          obj["results"].push(tramObj);
+
         }
-        // console.log(tableData);
-        // /console.log(`Stop #${stop} returned records size: ${tableData.length}`);
+        stopData.push(obj);
+        // console.log(`Push Stop #${stop} stopData size: ${stopData.length}`);
+        /***
+        TODO: pipe to writable stream for file here instead of this
+        ***/
+        if (stopData.length === stops.length) {
+          // console.log("Finito");
+          if (SAVE_DATA_TO_FILE) {
+            // console.log("Save file");
+            const dir = path.join(__dirname, 'data', 'historic', `${queryTimeMS}`);
+            // const filename = `luas-stop${stop.padStart(2, '0')}-${ms}.json`;
+            const filename = `luas-${queryTimeMS}.json`;
+            if (!fs.existsSync(dir)) {
+              fs.mkdirSync(dir);
+            }
+            fs.writeFileSync(path.join(dir, filename), `${JSON.stringify(stopData, null, 2)}`);
+            console.log(`Luas data written to ${dir}/${filename}`);
+          }
+        }
       })
       .catch((e) => {
         console.log(`Error fetching html Luas data \n ${e}`);
-      });
+      })
   });
 };
 
@@ -144,7 +166,7 @@ function getLuasBatch(stops, SAVE_EXAMPLE_DATA) {
 function luasCron(stops) {
   cron.schedule('*/1 * * * *', () => {
     util.log(`Running luas cron`);
-    getLuasBatch(stops, false); // don't save example data as text
+    getLuasBatch(stops, true); // don't save example data as text
   })
 };
 // Connection string
@@ -169,51 +191,6 @@ let client = new pg.Client({
 client.connect((e) => {
   console.log("Error connecting to DB " + e);
 });
-// db.connect((err) => {
-//   if (err) throw err
-//   // db.query(`
-//   //   CREATE TABLE IF NOT EXISTS quote_docs (
-//   //     id SERIAL,
-//   //     doc jsonb,
-//   //     CONSTRAINT author CHECK (length(doc->>'author') > 0 AND (doc->>'author') IS NOT NULL),
-//   //     CONSTRAINT quote CHECK (length(doc->>'quote') > 0 AND (doc->>'quote') IS NOT NULL)
-//   //   )
-//   // `, (err) => {
-//   //   if (err) throw err
-//   //
-//   //   if (params.author && params.quote) {
-//   //     db.query(`
-//   //       INSERT INTO quote_docs (doc)
-//   //       VALUES ($1);
-//   //     `, [params], (err) => {
-//   //       if (err) throw err
-//   //       list(db, params)
-//   //     })
-//   //   }
-//   //
-//   //   if (!params.quote) list(db, params)
-//   else {
-//     console.log(`Connected to DB ${db}`);
-//     // list(db, `Neal Stephenson`)
-//   }
-// })
-//
-// function list(db, params) {
-//   // if (!params.author) return db.end()
-//   // db.query(`
-//   //   SELECT * FROM quotes
-//   //   WHERE author LIKE ${db.escapeLiteral(params)}
-//   // `, (err, results) => {
-//   //   if (err) throw err
-//   //   results.rows.forEach(({
-//   //     author,
-//   //     quote
-//   //   }) => {
-//   //     console.log(`${author} ${quote}`)
-//   //   })
-//   //   db.end()
-//   // })
-// }
-
+//     list(db, `Neal Stephenson`)
 
 module.exports = app;
