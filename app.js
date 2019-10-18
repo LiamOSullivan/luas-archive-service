@@ -70,9 +70,9 @@ fs.createReadStream('data/luas-stops.txt')
     // console.log(stopIDs);
     luasCron(stopIDs); //start batch script on a schedule
     if (app.get('env') === 'development') {
-      util.log(`***
-                  Dashboard is in dev- run query now
-                ***`);
+      util.log(`************************************
+                  Service is in dev- run query now
+                  ************************************`);
       getLuasBatch(stopIDs, true); //start batch script now (for dev), save example data as text
     }
   })
@@ -98,7 +98,7 @@ const getLuasHTML = async url => {
 //the call to the function returns a promise, so easy to proceed with response data with then()
 
 function getLuasBatch(stops, SAVE_DATA_TO_FILE) {
-  const queryTimeMS = Date.now();
+  const stopQueryDateMS = Date.now();
   // if(SAVE_DATA_TO_FILE) luasExampleData = createOutputStream();
   let stopData = [];
   stops.forEach((stop, i) => {
@@ -114,13 +114,19 @@ function getLuasBatch(stops, SAVE_DATA_TO_FILE) {
         let rows = htmlDoc.getElementsByTagName("tr");
         // console.log("#rows = " + rows.length + "\n");
 
-        const timestamp = new Date();
+        const stopQueryDate = new Date();
+        const year = stopQueryDate.getFullYear().toString();
+        const month = stopQueryDate.getMonth().toString().padStart(2, '0');
+        const day = stopQueryDate.getDay().toString().padStart(2, '0');
+        const hour = stopQueryDate.getHours().toString().padStart(2, '0');
+        const dirName = `${year}-${month}-${day}-${hour}`;
 
-        const ms = Date.now();
         let obj = {};
         obj["stopID"] = stop;
-        obj["queryTime"] = timestamp;
+        obj["stopQueryDate"] = stopQueryDate;
+        obj["count"] = rows.length - 1;
         obj["results"] = [];
+
         //no of rows ion the data is the number of trams listed to arrive
         for (let i = 1; i < rows.length; i += 1) {
           let tramObj = {};
@@ -143,9 +149,9 @@ function getLuasBatch(stops, SAVE_DATA_TO_FILE) {
           // console.log("Finito");
           if (SAVE_DATA_TO_FILE) {
             // console.log("Save file");
-            const dir = path.join(__dirname, 'data', 'historic', `${queryTimeMS}`);
+            const dir = path.join(__dirname, 'data', 'historic', dirName);
             // const filename = `luas-stop${stop.padStart(2, '0')}-${ms}.json`;
-            const filename = `luas-${queryTimeMS}.json`;
+            const filename = `luas-${stopQueryDateMS}.json`;
             if (!fs.existsSync(dir)) {
               fs.mkdirSync(dir);
             }
