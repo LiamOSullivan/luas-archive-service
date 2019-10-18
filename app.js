@@ -1,3 +1,4 @@
+require('dotenv').config();
 const createError = require('http-errors')
 const express = require('express')
 const path = require('path')
@@ -178,25 +179,28 @@ function luasCron(stops) {
 // Connection string
 // const CONNECT_STRING = 'host=luas-archive-db-server.postgres.database.azure.com port=5432 dbname={your_database} user=losullivan@luas-archive-db-server password={your_password} sslmode=disable';
 //
-// const host = 'luas-archive-db-server.postgres.database.azure.com',
-//   port = 5432,
-//   dbname = 'luas-archive-db-server',
-//   user = 'losullivan@luas-archive-db-server',
-//   password = '*********';
-// sslmode = true;
+
+console.log(`${process.env.REALTIME_DB_SERVERNAME}`);
+
+const config = {
+  host: process.env.REALTIME_DB_SERVERNAME,
+  port: 5432,
+  database: process.env.LUAS_ARCHIVE_DB_NAME,
+  user: process.env.REALTIME_DB_USER,
+  password: process.env.REALTIME_DB_PASSWORD,
+  ssl: true,
+}
 //
-// let client = new pg.Client({
-//   user: user,
-//   password: password,
-//   database: dbname,
-//   port: port,
-//   host: host,
-//   ssl: false
-// });
+const client = new pg.Client(config);
 //
-// client.connect((e) => {
-//   console.log("Error connecting to DB " + e);
-// });
+client.connect((e) => {
+  if (e) {
+    console.log("Error connecting to DB " + e);
+  } else {
+    // queryDB();
+    console.log(`Successfully connected to DB ${config.database} `);
+  }
+});
 //     list(db, `Neal Stephenson`)
 
 module.exports = app;

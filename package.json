@@ -12,6 +12,7 @@
     "csv-parser": "^2.3.1",
     "debug": "~2.6.9",
     "dom-parser": "^0.1.6",
+    "dotenv": "^8.2.0",
     "express": "~4.16.0",
     "http-errors": "~1.6.2",
     "moment": "^2.24.0",
