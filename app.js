@@ -207,32 +207,32 @@ function luasCron(stops) {
 // const CONNECT_STRING = 'host=luas-archive-db-server.postgres.database.azure.com port=5432 dbname={your_database} user=losullivan@luas-archive-db-server password={your_password} sslmode=disable';
 //
 
-const config = {
-  host: process.env.REALTIME_DB_SERVERNAME,
-  port: 5432,
-  database: process.env.LUAS_ARCHIVE_DB_NAME,
-  user: process.env.REALTIME_DB_USER,
-  password: process.env.REALTIME_DB_PASSWORD,
-  ssl: true,
-}
+// const config = {
+//   host: process.env.REALTIME_DB_SERVERNAME,
+//   port: 5432,
+//   database: process.env.LUAS_ARCHIVE_DB_NAME,
+//   user: process.env.REALTIME_DB_USER,
+//   password: process.env.REALTIME_DB_PASSWORD,
+//   ssl: true,
+// }
+// //
+// const client = new pg.Client(config);
+// //
+// client.connect((e) => {
+//   if (e) {
+//     console.log("Error connecting to DB " + e);
+//   } else {
+//     // queryDB();
+//     console.log(`Successfully connected to DB ${config.database} `);
+//   }
+// });
+// //
 //
-const client = new pg.Client(config);
-//
-client.connect((e) => {
-  if (e) {
-    console.log("Error connecting to DB " + e);
-  } else {
-    // queryDB();
-    console.log(`Successfully connected to DB ${config.database} `);
-  }
-});
-//
-
-//test db time query
-client
-  .query('SELECT NOW() as now')
-  .then(res => console.log(res.rows[0]))
-  .catch(e => console.error(e.stack))
+// //test db time query
+// client
+//   .query('SELECT NOW() as now')
+//   .then(res => console.log(res.rows[0]))
+//   .catch(e => console.error(e.stack))
 
 // const query = {
 //   text: 'INSERT INTO users(name, email) VALUES($1, $2)',
