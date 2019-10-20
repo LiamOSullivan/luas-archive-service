@@ -117,8 +117,11 @@ function getLuasBatch(stops, SAVE_DATA_TO_FILE) {
 
         const stopQueryDate = new Date();
         const year = stopQueryDate.getFullYear().toString();
-        const month = stopQueryDate.getMonth().toString().padStart(2, '0');
-        const day = stopQueryDate.getDay().toString().padStart(2, '0');
+        let month = stopQueryDate.getMonth() + 1;
+        month = month.toString().padStart(2, '0');
+        const day = stopQueryDate.getDate().toString().padStart(2, '0');
+
+        console.log(`day ${day}`);
         const hour = stopQueryDate.getHours().toString().padStart(2, '0');
         const dirName = `${year}-${month}-${day}-${hour}`;
 
