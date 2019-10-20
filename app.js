@@ -102,7 +102,9 @@ function getLuasBatch(stops, SAVE_DATA_TO_FILE) {
   const stopQueryDateMS = Date.now();
   // if(SAVE_DATA_TO_FILE) luasExampleData = createOutputStream();
   let stopData = [];
-  stops.forEach((stop, i) => {
+  let flatData = [];
+  let flatCount = 0
+  stops.forEach((stop, idx) => {
     //console.log(i + " Get stop " + stop);
     getLuasHTML(luasAPIBase + stop)
       .then((html) => {
@@ -120,31 +122,39 @@ function getLuasBatch(stops, SAVE_DATA_TO_FILE) {
         let month = stopQueryDate.getMonth() + 1;
         month = month.toString().padStart(2, '0');
         const day = stopQueryDate.getDate().toString().padStart(2, '0');
-
-        console.log(`day ${day}`);
         const hour = stopQueryDate.getHours().toString().padStart(2, '0');
         const dirName = `${year}-${month}-${day}-${hour}`;
 
-        let obj = {};
+        let obj = {},
+          flatObj = {};
         obj["stopID"] = stop;
         obj["stopQueryDate"] = stopQueryDate;
         obj["count"] = rows.length - 1;
         obj["results"] = [];
-
+        flatCount += 1;
         //no of rows ion the data is the number of trams listed to arrive
         for (let i = 1; i < rows.length; i += 1) {
           let tramObj = {};
+
           for (let j = 0; j < headings.length; j += 1) {
             let key = headings[j].childNodes[0].text;
             // console.log("heading: " + JSON.stringify(heading));
             let value = rows[i].getElementsByTagName("td")[j].innerHTML;
             // console.log("\nvalue: " + value);
             tramObj[`${key}`] = value;
+
+            flatObj["stopID"] = stop;
+            flatObj["stopQueryDate"] = stopQueryDate;
+            flatObj[`${key}`] = value;
+            // console.log(`flatobj ${JSON.stringify(flatObj)}`);
           }
           obj["results"].push(tramObj);
+          flatData.push(flatObj);
 
         }
         stopData.push(obj);
+
+        // console.log(`${flatCount} - flatData: ${flatData.length} of ${stops.length}`);
         // console.log(`Push Stop #${stop} stopData size: ${stopData.length}`);
         /***
         TODO: pipe to writable stream for file here instead of this
@@ -163,11 +173,25 @@ function getLuasBatch(stops, SAVE_DATA_TO_FILE) {
             console.log(`Luas data written to ${dir}/${filename}`);
           }
         }
+        if (flatCount === stops.length) {
+          // console.log("Finito");
+          if (SAVE_DATA_TO_FILE) {
+            // console.log("Save file");
+            const dir = path.join(__dirname, 'data', 'historic', 'flat', dirName);
+            // const filename = `luas-stop${stop.padStart(2, '0')}-${ms}.json`;
+            const filename = `luas-${stopQueryDateMS}.json`;
+            if (!fs.existsSync(dir)) {
+              fs.mkdirSync(dir);
+            }
+            fs.writeFileSync(path.join(dir, filename), `${JSON.stringify(flatData, null, 2)}`);
+            console.log(`Luas data written to ${dir}/${filename}`);
+          }
+        }
       })
       .catch((e) => {
         console.log(`Error fetching html Luas data \n ${e}`);
       })
-  });
+  }); //end foreach
 };
 
 
@@ -182,8 +206,6 @@ function luasCron(stops) {
 // Connection string
 // const CONNECT_STRING = 'host=luas-archive-db-server.postgres.database.azure.com port=5432 dbname={your_database} user=losullivan@luas-archive-db-server password={your_password} sslmode=disable';
 //
-
-console.log(`${process.env.REALTIME_DB_SERVERNAME}`);
 
 const config = {
   host: process.env.REALTIME_DB_SERVERNAME,
@@ -204,6 +226,19 @@ client.connect((e) => {
     console.log(`Successfully connected to DB ${config.database} `);
   }
 });
-//     list(db, `Neal Stephenson`)
+//
+
+//test db time query
+client
+  .query('SELECT NOW() as now')
+  .then(res => console.log(res.rows[0]))
+  .catch(e => console.error(e.stack))
+
+// const query = {
+//   text: 'INSERT INTO users(name, email) VALUES($1, $2)',
+//   values: ['brianc', 'brian.m.carlson@gmail.com'],
+// }
+
+
 
 module.exports = app;
