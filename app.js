@@ -224,16 +224,73 @@ const config = {
   ssl: true,
 }
 // //
+let d = new Date;
 const client = new pg.Client(config);
+let author = `test author`;
+let quote = `test quote ${d.getHours()}-${d.getMinutes()}-${d.getSeconds()}`;
+let params = {
+  author: author,
+  quote: quote
+};
 // //
 client.connect((e) => {
   if (e) {
     console.log("Error connecting to DB " + e);
+    throw e;
   } else {
     dbHeartbeatCron();
     console.log(`Successfully connected to DB ${config.database} `);
+
+    client.query(`
+      CREATE TABLE IF NOT EXISTS quote_docs (
+        id SERIAL,
+        doc jsonb,
+        CONSTRAINT author CHECK (length(doc->>'author') > 0 AND (doc->>'author') IS NOT NULL),
+        CONSTRAINT quote CHECK (length(doc->>'quote') > 0 AND (doc->>'quote') IS NOT NULL)
+      )`, (err) => {
+      if (err) throw err
+
+      if (params.author && params.quote) {
+        console.log(`Query INSERT ${JSON.stringify(params)}`);
+        client.query(`
+          INSERT INTO quote_docs (doc)
+          VALUES ($1);
+        `, [params], (err) => {
+          if (err) throw err
+          list(client, params);
+        })
+      } else {
+        console.log(`No author and/or quote`);
+      }
+    });
   }
 });
+
+function list(client, params) {
+  if (!params.author) {
+    console.log(`End!`);
+    return client.end();
+  }
+  console.log(`Run list!`);
+  client.query(`
+    SELECT * FROM quote_docs
+    WHERE doc ->> 'author' LIKE ${client.escapeLiteral(params.author)}
+  `, (err, results) => {
+    if (err) throw err
+    results.rows
+      .map(({
+        doc
+      }) => doc)
+      .forEach(({
+        author,
+        quote
+      }) => {
+        console.log(`${author} ${quote}`)
+      })
+    //client.end()
+  })
+}
+
 // //
 //
 // //test db time query
@@ -245,6 +302,8 @@ function dbHeartbeatCron() {
       .query('SELECT NOW() as now')
       .then(res => console.log(`Heartbeat - ${JSON.stringify(res.rows[0])}`))
       .catch(e => console.error(e.stack));
+
+
   })
 };
 
