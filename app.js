@@ -14,8 +14,6 @@ const usersRouter = require('./routes/users')
 const csv = require('csv-parser');
 const DomParser = require('dom-parser');
 const pg = require('pg');
-const db = new pg.Client();
-
 const app = express();
 
 // view engine setup
@@ -205,15 +203,25 @@ function luasCron(stops) {
 };
 
 
-/******
+/********************
 
 Database Access Layer
 
-*****/
+*********************/
 
 // Connection string
 // const CONNECT_STRING = 'host=luas-archive-db-server.postgres.database.azure.com port=5432 dbname={your_database} user=losullivan@luas-archive-db-server password={your_password} sslmode=disable';
 //
+
+
+let d = new Date;
+let author = `test author`;
+let quote = `test quote ${d.getHours()}-${d.getMinutes()}-${d.getSeconds()}`;
+let params = {
+  author: author,
+  quote: quote
+};
+
 
 const config = {
   host: process.env.REALTIME_DB_SERVERNAME,
@@ -223,73 +231,95 @@ const config = {
   password: process.env.REALTIME_DB_PASSWORD,
   ssl: true,
 }
-// //
-let d = new Date;
-const client = new pg.Client(config);
-let author = `test author`;
-let quote = `test quote ${d.getHours()}-${d.getMinutes()}-${d.getSeconds()}`;
-let params = {
-  author: author,
-  quote: quote
-};
-// //
-client.connect((e) => {
-  if (e) {
-    console.log("Error connecting to DB " + e);
-    throw e;
-  } else {
-    dbHeartbeatCron();
-    console.log(`Successfully connected to DB ${config.database} `);
 
-    client.query(`
-      CREATE TABLE IF NOT EXISTS quote_docs (
-        id SERIAL,
-        doc jsonb,
-        CONSTRAINT author CHECK (length(doc->>'author') > 0 AND (doc->>'author') IS NOT NULL),
-        CONSTRAINT quote CHECK (length(doc->>'quote') > 0 AND (doc->>'quote') IS NOT NULL)
-      )`, (err) => {
-      if (err) throw err
+const {
+  Pool
+} = require('pg');
+// const client = new Client(config);
+const pool = new Pool(config);
 
-      if (params.author && params.quote) {
-        console.log(`Query INSERT ${JSON.stringify(params)}`);
-        client.query(`
-          INSERT INTO quote_docs (doc)
-          VALUES ($1);
-        `, [params], (err) => {
-          if (err) throw err
-          list(client, params);
-        })
-      } else {
-        console.log(`No author and/or quote`);
-      }
-    });
-  }
-});
+pool.on('error', (e, poolClient) => {
+  console.error(`Error on idle client ${e} `);
+})
 
-function list(client, params) {
-  if (!params.author) {
-    console.log(`End!`);
-    return client.end();
-  }
-  console.log(`Run list!`);
-  client.query(`
-    SELECT * FROM quote_docs
-    WHERE doc ->> 'author' LIKE ${client.escapeLiteral(params.author)}
-  `, (err, results) => {
-    if (err) throw err
-    results.rows
-      .map(({
-        doc
-      }) => doc)
-      .forEach(({
-        author,
-        quote
-      }) => {
-        console.log(`${author} ${quote}`)
+pool
+  .connect()
+  .then(poolClient => {
+    return poolClient
+      .query(`SELECT * FROM quote_docs;`, [])
+      .then(res => {
+        console.log(`Pool client query response: ${JSON.stringify(res.rows[res.rows.length-1])}`) //if an err occurs here it can cause a double release
+        poolClient.release()
       })
-    //client.end()
+      .catch(e => {
+        poolClient.release();
+        console.error(`Error on pool client query ${e.stack}`)
+      })
   })
-}
+  .catch(e => {
+    console.error(`Error on pool client connect ${e.stack}`);
+  })
+
+
+
+// //
+// client.connect((e) => {
+//   if (e) {
+//     console.log("Error connecting to DB " + e);
+//     throw e;
+//   } else {
+//     dbHeartbeatCron();
+//     console.log(`Successfully connected to DB ${config.database} `);
+//
+//     client.query(`
+//       CREATE TABLE IF NOT EXISTS quote_docs (
+//         id SERIAL,
+//         doc jsonb,
+//         CONSTRAINT author CHECK (length(doc->>'author') > 0 AND (doc->>'author') IS NOT NULL),
+//         CONSTRAINT quote CHECK (length(doc->>'quote') > 0 AND (doc->>'quote') IS NOT NULL)
+//       )`, (err) => {
+//       if (err) throw err
+//
+//       if (params.author && params.quote) {
+//         console.log(`Query INSERT ${JSON.stringify(params)}`);
+//         client.query(`
+//           INSERT INTO quote_docs (doc)
+//           VALUES ($1);
+//         `, [params], (err) => {
+//           if (err) throw err
+//           list(client, params);
+//         })
+//       } else {
+//         console.log(`No author and/or quote`);
+//       }
+//     });
+//   }
+// });
+//
+// function list(client, params) {
+//   if (!params.author) {
+//     console.log(`End!`);
+//     return client.end();
+//   }
+//   console.log(`Run list!`);
+//   client.query(`
+//     SELECT * FROM quote_docs
+//     WHERE doc ->> 'author' LIKE ${client.escapeLiteral(params.author)}
+//   `, (err, results) => {
+//     if (err) throw err
+//     results.rows
+//       .map(({
+//         doc
+//       }) => doc)
+//       .forEach(({
+//         author,
+//         quote
+//       }) => {
+//         // console.log(`${author} ${quote}`)
+//       })
+//     client.end()
+//   })
+// }
 
 // //
 //
@@ -298,12 +328,10 @@ function list(client, params) {
 function dbHeartbeatCron() {
   cron.schedule('*/1 * * * *', () => {
     util.log(`Checking DB heartbeat\n`);
-    client
-      .query('SELECT NOW() as now')
-      .then(res => console.log(`Heartbeat - ${JSON.stringify(res.rows[0])}`))
-      .catch(e => console.error(e.stack));
-
-
+    // client
+    //   .query('SELECT NOW() as now')
+    //   .then(res => console.log(`Heartbeat - ${JSON.stringify(res.rows[0])}`))
+    //   .catch(e => console.error(`Heartbeat - ${e.stack}`));
   })
 };
 
