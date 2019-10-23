@@ -203,6 +203,14 @@ function luasCron(stops) {
     getLuasBatch(stops, true); // don't save example data as text
   })
 };
+
+
+/******
+
+Database Access Layer
+
+*****/
+
 // Connection string
 // const CONNECT_STRING = 'host=luas-archive-db-server.postgres.database.azure.com port=5432 dbname={your_database} user=losullivan@luas-archive-db-server password={your_password} sslmode=disable';
 //
@@ -222,17 +230,24 @@ client.connect((e) => {
   if (e) {
     console.log("Error connecting to DB " + e);
   } else {
-    // queryDB();
+    dbHeartbeatCron();
     console.log(`Successfully connected to DB ${config.database} `);
   }
 });
 // //
 //
 // //test db time query
-client
-  .query('SELECT NOW() as now')
-  .then(res => console.log(res.rows[0]))
-  .catch(e => console.error(e.stack));
+
+function dbHeartbeatCron() {
+  cron.schedule('*/1 * * * *', () => {
+    util.log(`Checking DB heartbeat\n`);
+    client
+      .query('SELECT NOW() as now')
+      .then(res => console.log(`Heartbeat - ${JSON.stringify(res.rows[0])}`))
+      .catch(e => console.error(e.stack));
+  })
+};
+
 
 //test table query
 // client
