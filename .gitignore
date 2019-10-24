@@ -17,6 +17,6 @@ node_modules/
 .env
 
 # large data files
-# data/historic/*/
+data/historic/*/
 
 .DS_Store
