@@ -222,43 +222,60 @@ let params = {
   quote: quote
 };
 
-
-const config = {
-  host: process.env.REALTIME_DB_SERVERNAME,
-  port: 5432,
-  database: process.env.LUAS_ARCHIVE_DB_NAME,
-  user: process.env.REALTIME_DB_USER,
-  password: process.env.REALTIME_DB_PASSWORD,
-  ssl: true,
-}
-
-const {
-  Pool
-} = require('pg');
-// const client = new Client(config);
-const pool = new Pool(config);
-
-pool.on('error', (e, poolClient) => {
-  console.error(`Error on idle client ${e} `);
+const db = require('./dal')
+let queryString = `SELECT * FROM quote_docs;`;
+db.query(queryString, [], (e, res) => {
+  if (e) {
+    return next(e);
+  }
+  console.log(`Query Res: ${JSON.stringify(res.rows[res.rows.length-1])}`);
 })
 
-pool
-  .connect()
-  .then(poolClient => {
-    return poolClient
-      .query(`SELECT * FROM quote_docs;`, [])
-      .then(res => {
-        console.log(`Pool client query response: ${JSON.stringify(res.rows[res.rows.length-1])}`) //if an err occurs here it can cause a double release
-        poolClient.release()
-      })
-      .catch(e => {
-        poolClient.release();
-        console.error(`Error on pool client query ${e.stack}`)
-      })
-  })
-  .catch(e => {
-    console.error(`Error on pool client connect ${e.stack}`);
-  })
+
+
+// const config = {
+//   host: process.env.REALTIME_DB_SERVERNAME,
+//   port: 5432,
+//   database: process.env.LUAS_ARCHIVE_DB_NAME,
+//   user: process.env.REALTIME_DB_USER,
+//   password: process.env.REALTIME_DB_PASSWORD,
+//   ssl: true,
+// }
+
+// const {
+//   Pool
+// } = require('pg');
+// const client = new Client(config);
+// const pool = new Pool(config);
+
+
+
+
+
+
+// pool.on('error', (e, poolClient) => {
+//   console.error(`Error on idle client ${e} `);
+// })
+//
+//
+//
+// pool
+//   .connect()
+//   .then(poolClient => {
+//     return poolClient
+//       .query(queryString, [])
+//       .then(res => {
+//         console.log(`Pool client query response: ${JSON.stringify(res.rows[res.rows.length-1])}`); //if an err occurs here it can cause a double release
+//         poolClient.release();
+//       })
+//       .catch(e => {
+//         console.error(`Error on pool client query ${e.stack}`);
+//         poolClient.release();
+//       })
+//   })
+// .catch(e => { //seems to be necessary for uncaught promise exception
+//   console.error(`Error on pool client connect ${e.stack}`);
+// })
 
 
 
