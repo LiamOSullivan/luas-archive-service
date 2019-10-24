@@ -218,67 +218,156 @@ let d = new Date;
 let author = `test author`;
 let quote = `test quote ${d.getHours()}-${d.getMinutes()}-${d.getSeconds()}`;
 let params = {
-  author: author,
-  quote: quote
-};
+  "stopID": "44",
+  "stopQueryDate": "2019-10-24T15:00:04.556Z",
+  "count": 6,
+  "results": [{
+      "Direction": "Inbound",
+      "Destination": "Parnell",
+      "Time": "00:06:23",
+      "AVLS": "00:07:03",
+      "Tram": "4001",
+      "Action": "a",
+      "Msg Sent": "24/10/2019 15:59:58",
+      "Msg Received": "24/10/2019 15:59:58",
+      "Msg Processed": "24/10/2019 15:59:59",
+      "XML ID": "23008",
+      "Total Lag": "1.3310332",
+      "Create Lag": "0.4349533",
+      "Process Lag": "0.8960799"
+    },
+    {
+      "Direction": "Inbound",
+      "Destination": "Parnell",
+      "Time": "00:14:23",
+      "AVLS": "00:15:03",
+      "Tram": "5023",
+      "Action": "a",
+      "Msg Sent": "24/10/2019 15:59:59",
+      "Msg Received": "24/10/2019 15:59:59",
+      "Msg Processed": "24/10/2019 16:00:00",
+      "XML ID": "23010",
+      "Total Lag": "1.5055758",
+      "Create Lag": "0.6904078",
+      "Process Lag": "0.815168"
+    },
+    {
+      "Direction": "Outbound",
+      "Destination": "Bride's Glen",
+      "Time": "00:01:58",
+      "AVLS": "00:02:38",
+      "Tram": "5024",
+      "Action": "a",
+      "Msg Sent": "24/10/2019 16:00:01",
+      "Msg Received": "24/10/2019 16:00:01",
+      "Msg Processed": "24/10/2019 16:00:01",
+      "XML ID": "23011",
+      "Total Lag": "0.7910377",
+      "Create Lag": "0.6656845",
+      "Process Lag": "0.1253532"
+    },
+    {
+      "Direction": "Outbound",
+      "Destination": "Bride's Glen",
+      "Time": "00:11:20",
+      "AVLS": "00:12:00",
+      "Tram": "5030",
+      "Action": "a",
+      "Msg Sent": "24/10/2019 15:59:59",
+      "Msg Received": "24/10/2019 15:59:59",
+      "Msg Processed": "24/10/2019 16:00:00",
+      "XML ID": "23010",
+      "Total Lag": "1.8677786",
+      "Create Lag": "0.6904078",
+      "Process Lag": "1.1773708"
+    },
+    {
+      "Direction": "Outbound",
+      "Destination": "Bride's Glen",
+      "Time": "00:12:19",
+      "AVLS": "00:12:59",
+      "Tram": "5004",
+      "Action": "a",
+      "Msg Sent": "24/10/2019 15:59:58",
+      "Msg Received": "24/10/2019 15:59:58",
+      "Msg Processed": "24/10/2019 15:59:59",
+      "XML ID": "23009",
+      "Total Lag": "1.9091918",
+      "Create Lag": "0.6560336",
+      "Process Lag": "1.2531582"
+    },
+    {
+      "Direction": "Outbound",
+      "Destination": "Bride's Glen",
+      "Time": "00:16:16",
+      "AVLS": "00:16:56",
+      "Tram": "5010",
+      "Action": "a",
+      "Msg Sent": "24/10/2019 15:59:58",
+      "Msg Received": "24/10/2019 15:59:58",
+      "Msg Processed": "24/10/2019 16:00:00",
+      "XML ID": "23009",
+      "Total Lag": "2.1600199",
+      "Create Lag": "0.6560336",
+      "Process Lag": "1.5039863"
+    }
+  ]
+}
+
 
 const db = require('./dal')
-let queryString = `SELECT * FROM quote_docs;`;
-db.query(queryString, [], (e, res) => {
+let selectALlString = `SELECT * FROM luas_stops_readings;`;
+
+db.query(selectALlString, [], (e, res) => {
   if (e) {
     return next(e);
   }
   console.log(`Query Res: ${JSON.stringify(res.rows[res.rows.length-1])}`);
 })
 
+let createTableString =
+  `CREATE TABLE IF NOT EXISTS luas_stops_readings (
+    id SERIAL,
+    doc jsonb
+    );`;
+// TODO: add constraints to the above
+// CONSTRAINT stop_id CHECK (length(doc->>'stopID') > 0 AND (doc->>'stop_id') IS NOT NULL),
+// CONSTRAINT stop_query_date CHECK (length(doc->>'quote') > 0 AND (doc->>'quote') IS NOT NULL)
+
+let insertString = `INSERT INTO luas_stops_readings(doc) VALUES ($1);`;
+
+db.query(createTableString, [], (e, res) => {
+  // if (e) {
+  // return e; //if this were in an API call you'd call next(e) here
+  if (e) throw err
+
+  console.log(`Query ${createTableString}`);
+  // console.log(`Res: ${JSON.stringify(res)}`);
+  db.query(insertString, [params], (e, res) => {
+    if (e) throw e
+    console.log(`Query ${insertString} `);
+    // console.log(`Res: ${JSON.stringify(res)}`);
+  })
+})
 
 
-// const config = {
-//   host: process.env.REALTIME_DB_SERVERNAME,
-//   port: 5432,
-//   database: process.env.LUAS_ARCHIVE_DB_NAME,
-//   user: process.env.REALTIME_DB_USER,
-//   password: process.env.REALTIME_DB_PASSWORD,
-//   ssl: true,
-// }
+db.query(selectALlString, [], (e, res) => {
+  if (e) {
+    return next(e);
+  }
+  console.log(`Query Res: ${JSON.stringify(res.rows[res.rows.length-1])}`);
+})
 
-// const {
-//   Pool
-// } = require('pg');
-// const client = new Client(config);
-// const pool = new Pool(config);
+// let listString =
+//   `SELECT * FROM quote_docs
+//     WHERE doc ->> 'author' LIKE ${db.client.escapeLiteral(params.author)};`;
 
-
-
-
-
-
-// pool.on('error', (e, poolClient) => {
-//   console.error(`Error on idle client ${e} `);
-// })
+// db.query(listString, [params], (e, res) => {
+//   if (err) throw err
+//   console.log(`Query ${listString} `);
+//   // console.log(`Res: ${JSON.stringify(res.rows[0])}`);
 //
-//
-//
-// pool
-//   .connect()
-//   .then(poolClient => {
-//     return poolClient
-//       .query(queryString, [])
-//       .then(res => {
-//         console.log(`Pool client query response: ${JSON.stringify(res.rows[res.rows.length-1])}`); //if an err occurs here it can cause a double release
-//         poolClient.release();
-//       })
-//       .catch(e => {
-//         console.error(`Error on pool client query ${e.stack}`);
-//         poolClient.release();
-//       })
-//   })
-// .catch(e => { //seems to be necessary for uncaught promise exception
-//   console.error(`Error on pool client connect ${e.stack}`);
-// })
-
-
-
+// });
 // //
 // client.connect((e) => {
 //   if (e) {
@@ -351,6 +440,7 @@ function dbHeartbeatCron() {
     //   .catch(e => console.error(`Heartbeat - ${e.stack}`));
   })
 };
+
 
 
 //test table query

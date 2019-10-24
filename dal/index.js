@@ -1,5 +1,6 @@
 const {
-  Pool
+  Pool,
+  Client
 } = require('pg');
 
 const config = {
@@ -12,20 +13,22 @@ const config = {
 }
 
 const pool = new Pool(config);
+const client = new Client(config); //export some functions in client
 
 module.exports = {
   query: (text, params, cb) => {
     return pool.query(text, params, (e, res) => {
       console.log('Execute query', {
         text,
-        rows: res.rowCount
+        rows: res.rowCount || []
       });
-      cb(e, res);
+      cb(e, res); //assume this calls done from below?
     })
   },
   getClient: (cb) => {
     pool.connnect((e, client, done) => {
-      cb(e, client, done)
+      cb(e, client, done);
     })
-  }
+  },
+  client: client //export this to access e.g. escapeLiteral()
 }
